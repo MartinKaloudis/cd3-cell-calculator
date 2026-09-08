@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CD3⁺ Cell Calculator M10′ — Clinical (MVP)</title>
+<style>
+  :root{--navy:#1E3A5F;--teal:#0E7C7B;--green:#1F7A3D;--red:#9E3833;--grey:#5A6672;--line:#D5DCE4;--bg:#F4F7FA;--ink:#1B2733;--yellow:#FFF7DC}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:#EEF2F6;line-height:1.4;font-size:15px}
+  .wrap{max-width:1580px;margin:0 auto;padding:12px 20px 10px}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-bottom:2px solid var(--navy);padding-bottom:6px;margin-bottom:8px}
+  header .kicker{color:var(--teal);font-weight:700;font-size:11.5px;letter-spacing:.02em;text-transform:uppercase;width:100%}
+  header h1{margin:0;font-size:25px;color:var(--navy)}
+  .mvp{display:inline-block;background:#B45309;color:#fff;font-weight:800;font-size:10.5px;letter-spacing:.06em;padding:3px 9px;border-radius:5px;text-transform:uppercase}
+  header .desc{color:var(--grey);font-size:13.5px;margin:0;flex:1;min-width:300px}
+  header .desc b{color:#B45309}
+  .disclaimer{background:#FBEFD9;border-left:4px solid #9A6516;padding:8px 14px;border-radius:6px;font-size:13px;color:#5c4a21;margin:0 0 10px}
+  .grid{display:grid;grid-template-columns:1.25fr .95fr 1.15fr;gap:18px}
+  @media(max-width:1150px){.grid{grid-template-columns:1fr 1fr}} @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px 14px;box-shadow:0 1px 2px rgba(20,40,70,.04)}
+  .card h2{margin:0 0 3px;font-size:16.5px;color:var(--navy)}
+  .card .sub{color:var(--grey);font-size:12.5px;margin:0 0 12px}
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+  .field{margin:0}
+  .field.full{grid-column:1/-1}
+  .field label{display:block;font-weight:600;font-size:14px;margin-bottom:2px}
+  .field .hint{display:block;font-size:11.5px;color:var(--grey);margin-bottom:4px;line-height:1.3}
+  .field input,.field select{width:100%;padding:9px 10px;border:1px solid #C7D0DA;border-radius:7px;font-size:15px;background:var(--yellow)}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,124,123,.15)}
+  .field select.meta-input{background:#Eef4f9}
+  .btn{appearance:none;border:none;border-radius:8px;padding:10px 14px;font-size:14.5px;font-weight:600;cursor:pointer}
+  .btn-primary{background:var(--teal);color:#fff} .btn-primary:hover{background:#0b6968}
+  .btn-secondary{background:#fff;color:var(--navy);border:1px solid var(--navy)} .btn-secondary:hover{background:#f0f4f8}
+  .result{background:#E5F0E8;border:1px solid #BcdCC8;border-radius:10px;padding:14px 16px;margin:0 0 12px;display:none}
+  .result.show{display:block}
+  .result .big{font-size:40px;font-weight:800;color:var(--green);line-height:1}
+  .result .unit{font-size:14px;color:var(--grey);font-weight:600}
+  .result .meta{margin-top:7px;font-size:13px}
+  .badge{display:inline-block;padding:1px 8px;border-radius:20px;font-size:11.5px;font-weight:700;background:#fff;border:1px solid var(--teal);color:var(--teal)}
+  .badge.high{border-color:var(--red);color:var(--red)}
+  .warn{color:var(--red);font-size:11.5px;margin-top:4px}
+  .sec-title{font-size:11.5px;font-weight:700;color:var(--navy);margin:6px 0 4px;text-transform:uppercase;letter-spacing:.02em}
+  .stack .field{margin-bottom:11px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 6px}
+  .muted{color:var(--grey);font-size:11.5px}
+  .tablewrap{max-height:330px;overflow:auto;border:1px solid var(--line);border-radius:6px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:center;white-space:nowrap}
+  th{background:var(--navy);color:#fff;font-weight:600;position:sticky;top:0}
+  td.left{text-align:left}
+  .below{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+  @media(max-width:900px){.below{grid-template-columns:1fr}}
+  details{background:#fff;border:1px solid var(--line);border-radius:9px;padding:6px 12px}
+  summary{cursor:pointer;font-weight:600;color:var(--navy);font-size:13.5px}
+  .params{font-size:11px;color:var(--grey);background:var(--bg);border:1px dashed var(--line);border-radius:7px;padding:8px 10px;margin-top:6px}
+  .params b{color:var(--navy)}
+  .status{font-size:11.5px;margin-top:4px} .status.ok{color:var(--green)} .status.err{color:var(--red)}
+  footer{margin-top:10px;font-size:12px;color:var(--grey)}
+  @media(max-height:790px){
+    body{font-size:14px}
+    header h1{font-size:22px} header .desc{font-size:12.5px}
+    .disclaimer{padding:6px 12px;font-size:12px;margin-bottom:8px}
+    .card{padding:12px 14px 10px} .card .sub{margin-bottom:8px}
+    .fields{gap:8px 14px}
+    .field label{font-size:13px} .field .hint{font-size:10.5px;margin-bottom:3px}
+    .field input,.field select{padding:7px 9px;font-size:14px}
+    .result{padding:10px 12px;margin-bottom:8px} .result .big{font-size:32px}
+    .stack .field{margin-bottom:7px}
+    .tablewrap{max-height:240px}
+  }
+  @media(max-height:700px){ .field .hint{display:none} .card .sub{display:none} .fields{gap:6px 14px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">CD3⁺ Cell Calculator · Model M10′ (stratified)</div>
+    <h1>CD3⁺ yield prediction</h1><span class="mvp">Minimum Viable Product</span>
+    <p class="desc"><b>Early-stage prototype</b> — shared for feedback and collaborative data collection; not a certified medical device. Predicts the T-cell yield of a leukapheresis in ×10⁶ CD3⁺ cells per kg body weight.</p>
+  </header>
+
+  <div class="disclaimer"><b>Note:</b> Decision support only — not a substitute for clinical judgement. Please do <b>not enter any patient-identifying data</b>; use a pseudonym / sequential number for the case ID. The model is deliberately conservative (prediction below the actual value in ~90% of cases).</div>
+
+  <div class="grid">
+    <!-- INPUTS -->
+    <div class="card">
+      <h2>Inputs</h2>
+      <p class="sub">All values before apheresis. The result updates live.</p>
+      <div class="fields">
+        <div class="field"><label>Sex</label><span class="hint">Blood volume (Nadler).</span>
+          <select id="sex" onchange="calc()"><option value="m">Male</option><option value="w">Female</option></select></div>
+        <div class="field"><label>Body weight (kg)</label><span class="hint">Blood volume & normalization.</span>
+          <input id="wgt" type="number" step="0.1" value="75" oninput="calc()"></div>
+        <div class="field"><label>Height (m)</label><span class="hint">e.g. 1.75 — enters blood volume.</span>
+          <input id="len" type="number" step="0.01" value="1.75" oninput="calc()"></div>
+        <div class="field"><label>CD3⁺ before apheresis (cells/µL)</label><span class="hint">Differential count; sets group low/medium/high.</span>
+          <input id="cells" type="number" step="1" value="300" oninput="calc()"></div>
+        <div class="field"><label>Blood flow rate (mL/min)</label><span class="hint">Inlet flow, typically 40–100.</span>
+          <input id="flow" type="number" step="1" value="60" oninput="calc()"></div>
+        <div class="field"><label>Planned duration (min)</label><span class="hint">With flow → processed blood volume.</span>
+          <input id="time" type="number" step="1" value="180" oninput="calc()"></div>
+        <div class="field full"><label>Apheresis device / manufacturer</label><span class="hint">Recorded for data collection and future device-specific calibration — does <b>not</b> change the estimate.</span>
+          <select id="device" class="meta-input">
+            <option value="">— not specified —</option>
+            <option>Spectra Optia – CMNC (Terumo BCT)</option>
+            <option>Spectra Optia – MNC (Terumo BCT)</option>
+            <option>Amicus (Fresenius Kabi)</option>
+            <option>COM.TEC (Fresenius Kabi)</option>
+            <option>COBE Spectra (Terumo BCT)</option>
+            <option>Haemonetics MCS+ (Haemonetics)</option>
+            <option>Other</option>
+          </select></div>
+      </div>
+    </div>
+
+    <!-- RESULT + EVALUATION -->
+    <div class="card stack">
+      <h2>Result</h2>
+      <p class="sub">Prediction — and, after apheresis, the measured actual value.</p>
+      <div id="result" class="result">
+        <div><span class="big" id="prog">–</span> <span class="unit">×10⁶ CD3⁺ / kg</span></div>
+        <div class="meta">Group: <span id="group" class="badge">–</span> &nbsp;·&nbsp; safety factor α = <span id="alpha">–</span></div>
+        <div class="meta" id="inter"></div>
+        <div class="warn" id="highwarn" style="display:none">High pre-apheresis concentration: increased uncertainty — use with caution.</div>
+      </div>
+      <div class="sec-title">Evaluation (after apheresis)</div>
+      <div class="field"><label>Case ID (pseudonym / sequential no.)</label><span class="hint">No real name, no date of birth.</span>
+        <input id="caseid" type="text" placeholder="e.g. Z-2026-014"></div>
+      <div class="field"><label>Actual measured CD3⁺ yield (×10⁶ / kg)</label><span class="hint">Recorded for model evaluation.</span>
+        <input id="ist" type="number" step="0.01" placeholder="e.g. 20.5"></div>
+      <button class="btn btn-secondary" style="width:100%" onclick="record()">Record for evaluation</button>
+      <div id="recStatus" class="status"></div>
+    </div>
+
+    <!-- LOG -->
+    <div class="card">
+      <h2>Recorded cases (this session)</h2>
+      <p class="sub">For the research team — export as CSV (all fields). The more sites contribute, the better the model.</p>
+      <div class="toolbar">
+        <button class="btn btn-secondary" onclick="exportCSV()">Export CSV</button>
+        <button class="btn btn-secondary" onclick="clearLog()">Clear</button>
+        <span class="muted" id="count"></span>
+      </div>
+      <div class="tablewrap">
+        <table id="tbl">
+          <thead><tr><th>Time</th><th>Case</th><th>CD3⁺ pre</th><th>Device</th><th>Group</th><th>Pred.</th><th>Actual</th><th>Dev. %</th></tr></thead>
+          <tbody id="tbody"><tr><td colspan="8" class="muted">No cases recorded yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="below">
+    <details>
+      <summary>Model parameters (fixed — for information only)</summary>
+      <div class="params">Statistically estimated (solver, n = 253) — <b>not modifiable</b>: F50 = 7731 /µL · b₁ = 0.9318 · b₂ = 1.1035 · log α₀ = −2.9572 · α<sub>low</sub> = 0.7482 (&lt;405/µL) · α<sub>medium</sub> = 0.7731 (405–780/µL) · α<sub>high</sub> = 0.6250 (&gt;780/µL).<br>Calculation: CELLS_eff = CELLS/(1+CELLS/F50) · u = PV/GBV · Basis = α₀·CELLS_eff^b₁·u^b₂ · Prediction = α·Basis · GBV per Nadler (1962).</div>
+    </details>
+    <details>
+      <summary>Automatic data submission (optional, research team)</summary>
+      <div class="params">By default data do <b>not</b> leave the browser — submission is via CSV export. An endpoint URL sends recorded cases additionally as JSON (HTTP POST); it must be operated <b>GDPR-compliant</b> (encrypted, access-controlled, no patient-identifying data).
+        <div class="field" style="margin-top:6px"><label>Endpoint URL (optional)</label><input id="endpoint" type="url" placeholder="https://…/collect" style="background:#fff"></div>
+        <label class="muted"><input type="checkbox" id="autosend"> send recorded cases automatically</label>
+        <div id="epStatus" class="status"></div></div>
+    </details>
+  </div>
+
+  <footer>Model M10′ · quality n = 253: r = 0.849; MAPE ≈ 30%; prediction &lt; actual ≈ 89% per group. High group (CD3⁺ &gt; 780/µL) most uncertain — validate prospectively before broad use. A collaboration of AKAD University and LMU Klinikum München.</footer>
+</div>
+<script>
+const P={F50:7731,b1:0.9318,b2:1.1035,logA0:-2.9572,aLow:0.7482,aMid:0.7731,aHigh:0.6250};
+const GROUP={low:'low',medium:'medium',high:'high'};
+let entries=[];
+try{const s=localStorage.getItem('cd3_m10p_entries_en');if(s)entries=JSON.parse(s)||[];}catch(e){}
+
+function num(id){const v=parseFloat(document.getElementById(id).value);return isNaN(v)?null:v;}
+function gbv(sex,wgt,len){return sex==='w'?0.3561*Math.pow(len,3)+0.03308*wgt+0.1833:0.3669*Math.pow(len,3)+0.03219*wgt+0.6041;}
+
+function model(){
+  const sex=document.getElementById('sex').value;
+  const wgt=num('wgt'),len=num('len'),cells=num('cells'),flow=num('flow'),time=num('time');
+  const device=document.getElementById('device').value;
+  if([wgt,len,cells,flow,time].some(x=>x===null||x<=0))return null;
+  const GBV=gbv(sex,wgt,len), PV=flow*time/1000, u=PV/GBV;
+  const ceff=cells/(1+cells/P.F50);
+  const basis=Math.exp(P.logA0)*Math.pow(ceff,P.b1)*Math.pow(u,P.b2);
+  let group,alpha;
+  if(cells<405){group='low';alpha=P.aLow;}
+  else if(cells<780){group='medium';alpha=P.aMid;}
+  else {group='high';alpha=P.aHigh;}
+  return {sex,wgt,len,cells,flow,time,device,GBV,PV,u,ceff,basis,group,alpha,prognose:alpha*basis};
+}
+
+function calc(){
+  const m=model();
+  const box=document.getElementById('result');
+  if(!m){box.classList.remove('show');return;}
+  document.getElementById('prog').textContent=m.prognose.toFixed(2);
+  const g=document.getElementById('group');g.textContent=m.group;g.className='badge'+(m.group==='high'?' high':'');
+  document.getElementById('alpha').textContent=m.alpha.toFixed(4);
+  document.getElementById('inter').innerHTML='GBV = '+m.GBV.toFixed(2)+' L · processed '+m.PV.toFixed(1)+' L · u = '+m.u.toFixed(2);
+  document.getElementById('highwarn').style.display=(m.group==='high')?'block':'none';
+  box.classList.add('show');
+}
+
+function record(){
+  const m=model();
+  const st=document.getElementById('recStatus');
+  if(!m){st.className='status err';st.textContent='Please enter valid inputs and calculate first.';return;}
+  const ist=num('ist');
+  const caseid=document.getElementById('caseid').value.trim();
+  const dev=(ist!==null&&ist>0)?((m.prognose-ist)/ist*100):null;
+  const e={
+    ts:new Date().toISOString().slice(0,16).replace('T',' '),
+    caseid:caseid||'', sex:m.sex, wgt:m.wgt, len:m.len, cells:m.cells, flow:m.flow, time:m.time,
+    device:m.device||'', group:m.group, alpha:m.alpha, prognose:+m.prognose.toFixed(2),
+    ist:(ist!==null?ist:''), dev:(dev!==null?+dev.toFixed(1):'')
+  };
+  entries.push(e); persist(); renderTable(); calc();
+  st.className='status ok';st.textContent='Case recorded'+(e.ist!==''?' (incl. actual value).':' (actual value can be added later).');
+  document.getElementById('caseid').value='';document.getElementById('ist').value='';
+  if(document.getElementById('autosend').checked)send(e);
+}
+
+function persist(){try{localStorage.setItem('cd3_m10p_entries_en',JSON.stringify(entries));}catch(e){}}
+function renderTable(){
+  const tb=document.getElementById('tbody');
+  document.getElementById('count').textContent=entries.length+' case(s)';
+  if(!entries.length){tb.innerHTML='<tr><td colspan="8" class="muted">No cases recorded yet.</td></tr>';return;}
+  tb.innerHTML=entries.map(e=>`<tr>
+    <td>${e.ts.slice(5)}</td><td class="left">${esc(e.caseid)||'–'}</td><td>${e.cells}</td>
+    <td class="left">${esc(e.device).replace(/ \(.*\)/,'')||'–'}</td><td>${e.group}</td>
+    <td><b>${e.prognose}</b></td><td>${e.ist!==''?e.ist:'–'}</td><td>${e.dev!==''?e.dev:'–'}</td></tr>`).join('');
+}
+function esc(s){return (s+'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
+
+function exportCSV(){
+  if(!entries.length){alert('No cases to export.');return;}
+  const head=['Timestamp','Case_ID','Sex','Weight_kg','Height_m','CD3_pre_per_uL','Flow_mL_min','Duration_min','Device','Group','alpha','Prediction_x10e6_kg','Actual_x10e6_kg','Deviation_percent'];
+  const rows=entries.map(e=>[e.ts,e.caseid,e.sex,e.wgt,e.len,e.cells,e.flow,e.time,e.device,e.group,e.alpha,e.prognose,e.ist,e.dev]);
+  const csv=[head.join(';')].concat(rows.map(r=>r.map(x=>`"${(x+'').replace(/"/g,'""')}"`).join(';'))).join('\r\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='CD3_evaluation_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+function clearLog(){if(confirm('Delete all cases recorded in this session?')){entries=[];persist();renderTable();}}
+
+async function send(e){
+  const url=document.getElementById('endpoint').value.trim();
+  const st=document.getElementById('epStatus');
+  if(!url){st.className='status err';st.textContent='No endpoint URL set — stored locally only.';return;}
+  try{
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(e)});
+    st.className='status ok';st.textContent='Sent to endpoint ('+r.status+') at '+new Date().toLocaleTimeString();
+  }catch(err){st.className='status err';st.textContent='Submission failed: '+err.message+' — case is stored locally and included in the CSV.';}
+}
+
+renderTable(); calc();
+</script>
+</body>
+</html>
